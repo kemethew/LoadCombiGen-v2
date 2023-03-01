@@ -1,0 +1,63 @@
+Option Explicit
+
+Sub Generate_All()
+
+Call STAAD_LC_Generator
+Call SAFE_Load_Generator_Linear
+Call SAFE_Load_Generator_NonLinear
+ThisWorkbook.Sheets("INPUT TAB").Select
+
+
+End Sub
+
+Sub SAFE_Linear_Combo()
+
+Dim source As Worksheet
+Dim linear As Worksheet
+Dim nonlinear As Worksheet
+
+Set source = ThisWorkbook.Sheets("LC helper")
+Set linear = ThisWorkbook.Sheets("SAFE LC Linear")
+Set nonlinear = ThisWorkbook.Sheets("SAFE LC NonLinear")
+
+If Application.WorksheetFunction.CountIf(source.Range("c2:c51"), "D(slfwt)") = 0 Then
+    linear.Range("a4:xfd1048576").ClearContents
+    nonlinear.Range("a4:xfd1048576").ClearContents
+    MsgBox ("Please include one D(slfwt) load type in Step 1.")
+ElseIf Application.WorksheetFunction.CountIf(source.Range("c2:c51"), "D(slfwt)") > 1 Then
+    linear.Range("a4:xfd1048576").ClearContents
+    nonlinear.Range("a4:xfd1048576").ClearContents
+    MsgBox ("Only one D(slfwt) load type in Step 1 is allowed.")
+Else
+    Call SAFE_Load_Generator_NonLinear
+    Call SAFE_Load_Generator_Linear
+End If
+
+End Sub
+
+
+Sub SAFE_NonLinear_Combo()
+
+Dim source As Worksheet
+Dim linear As Worksheet
+Dim nonlinear As Worksheet
+
+Set source = ThisWorkbook.Sheets("LC helper")
+Set linear = ThisWorkbook.Sheets("SAFE LC Linear")
+Set nonlinear = ThisWorkbook.Sheets("SAFE LC NonLinear")
+
+If Application.WorksheetFunction.CountIf(source.Range("c2:c51"), "D(slfwt)") = 0 Then
+    linear.Range("a4:xfd1048576").ClearContents
+    nonlinear.Range("a4:xfd1048576").ClearContents
+    MsgBox ("Please include one D(slfwt) load type in Step 1.")
+ElseIf Application.WorksheetFunction.CountIf(source.Range("c2:c51"), "D(slfwt)") > 1 Then
+    linear.Range("a4:xfd1048576").ClearContents
+    nonlinear.Range("a4:xfd1048576").ClearContents
+    MsgBox ("Only one D(slfwt) load type in Step 1 is allowed.")
+Else
+    Call SAFE_Load_Generator_Linear
+    Call SAFE_Load_Generator_NonLinear
+End If
+
+End Sub
+

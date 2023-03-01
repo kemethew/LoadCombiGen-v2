@@ -1,0 +1,6 @@
+Sub go_back_to_input_tab()
+
+Application.Goto ThisWorkbook.Worksheets("INPUT TAB").Range("a1"), True
+ThisWorkbook.Worksheets("INPUT TAB").Range("a6").Select
+
+End Sub

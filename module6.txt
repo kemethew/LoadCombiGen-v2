@@ -1,0 +1,28 @@
+Sub LinkChecks()
+'Update by Extendoffice
+Dim xCB
+Dim xCChar
+Dim q
+i = 2
+'j = 2
+xCChar = "AN"
+'q = "J"
+For Each xCB In Sheets("INPUT TAB").CheckBoxes
+If xCB.Value = 1 Then
+    Sheets("LC helper").Cells(i, xCChar).Value = True
+'    Sheets("STAAD LC").Cells(j, q).Value = True
+'    Sheets("STAAD LC").Cells(j + 1, q).Value = True
+'    Sheets("STAAD LC").Cells(j + 2, q).Value = True
+Else
+    Sheets("LC helper").Cells(i, xCChar).Value = False
+'    Sheets("STAAD LC").Cells(j, q).Value = False
+'    Sheets("STAAD LC").Cells(j + 1, q).Value = False
+'    Sheets("STAAD LC").Cells(j + 2, q).Value = False
+    
+End If
+xCB.LinkedCell = Chr(39) & "LC helper" & Chr(39) & Chr(33) & Cells(i, xCChar).Address _
+'        & Chr(44) & Chr (39) & "STAAD LC" & Chr(39) & Chr(33) & Range(Cells(j, q), Cells(j + 2, q)).Address
+i = i + 1
+'j = j + 3
+Next xCB
+End Sub

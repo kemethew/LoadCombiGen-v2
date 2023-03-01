@@ -1,0 +1,120 @@
+Option Explicit
+
+Sub Create_SAFE_Linear_Analysis_txt_File()
+
+Dim fso As New FileSystemObject
+Dim SFfile As Object
+Dim fname As String
+Dim q As Long 'counter
+Dim wssps As Worksheet
+Dim wsllt As Worksheet
+Dim source As Worksheet
+Dim linear As Worksheet
+Dim nonlinear As Worksheet
+
+Set source = ThisWorkbook.Sheets("LC helper")
+Set linear = ThisWorkbook.Sheets("SAFE LC Linear")
+Set nonlinear = ThisWorkbook.Sheets("SAFE LC NonLinear")
+
+If Application.WorksheetFunction.CountIf(source.Range("c2:c51"), "D(slfwt)") = 0 Then
+    linear.Range("a4:xfd1048576").ClearContents
+    nonlinear.Range("a4:xfd1048576").ClearContents
+    MsgBox ("Please include one D(slfwt) load type in Step 1.")
+ElseIf Application.WorksheetFunction.CountIf(source.Range("c2:c51"), "D(slfwt)") > 1 Then
+    linear.Range("a4:xfd1048576").ClearContents
+    nonlinear.Range("a4:xfd1048576").ClearContents
+    MsgBox ("Only one D(slfwt) load type in Step 1 is allowed.")
+Else
+    Call SAFE_Load_Generator_Linear
+    Call SAFE_Load_Generator_NonLinear
+    ThisWorkbook.Sheets("INPUT TAB").Select
+    
+    Set fso = CreateObject("scripting.filesystemobject")
+    fname = Application.GetSaveAsFilename(InitialFileName:="Linear $SF " & Format(Date, "YY-MM-DD") & _
+            " " & Format(Time, "HH-MM"), FileFilter:="All Files, *.$SF", Title:="Save As")
+    If fname = "False" Then
+        Exit Sub
+    End If
+    Set SFfile = fso.createtextfile(fname, True)
+    
+    
+    'Contents coming from standard $SF text file, do not add rows in sheet reference
+    For q = 1 To 44
+        SFfile.write ThisWorkbook.Worksheets("$SF contents").Cells(q, 1).Value & vbCrLf
+    Next q
+    
+    SFfile.write vbCrLf
+    
+    Set wssps = ThisWorkbook.Worksheets("STAAD P&L to SAFE $SF")
+    For q = 1 To 49997 '49997 is the data limit from the reference file
+        If wssps.Cells(q, 2).Value <> vbNullString Then
+            SFfile.write wssps.Cells(q, 2).Value & vbCrLf
+        End If
+    Next q
+    
+    SFfile.write vbCrLf
+                
+    Set wsllt = ThisWorkbook.Worksheets("LinLoadTable to SAFE $SF")
+    For q = 1 To 1000 '1000 is the data limit from the reference file
+        If wsllt.Cells(q, 1).Value <> vbNullString Then
+            SFfile.write wsllt.Cells(q, 1).Value & vbCrLf
+        End If
+    Next q
+    
+    SFfile.write vbCrLf
+                 
+    For q = 1 To 1000 '1000 is the data limit from the reference file
+        If wsllt.Cells(q, 2).Value <> vbNullString Then
+            SFfile.write wsllt.Cells(q, 2).Value & vbCrLf
+        End If
+    Next q
+    
+    SFfile.write vbCrLf
+     
+    For q = 1 To 1000 '1000 is the data limit from the reference file
+        If wsllt.Cells(q, 3).Value <> vbNullString Then
+            SFfile.write wsllt.Cells(q, 3).Value & vbCrLf
+        End If
+    Next q
+        
+    SFfile.write vbCrLf
+     
+    For q = 1 To 1000 '1000 is the data limit from the reference file
+        If wsllt.Cells(q, 4).Value <> vbNullString Then
+            SFfile.write wsllt.Cells(q, 4).Value & vbCrLf
+        End If
+    Next q
+     
+    SFfile.write vbCrLf
+     
+    For q = 1 To 1000 '1000 is the data limit from the reference file
+        If wsllt.Cells(q, 5).Value <> vbNullString Then
+            SFfile.write wsllt.Cells(q, 5).Value & vbCrLf
+        End If
+    Next q
+     
+    SFfile.write vbCrLf
+    
+    'Contents coming from standard $SF text file, do not add rows in sheet reference
+    For q = 568 To 589
+        SFfile.write ThisWorkbook.Worksheets("$SF contents").Cells(q, 1).Value & vbCrLf
+    Next q
+    
+    SFfile.write vbCrLf
+    
+    For q = 1 To 49997 '49997 is the data limit from the reference file
+        If wssps.Cells(q, 1).Value <> vbNullString Then
+            SFfile.write wssps.Cells(q, 1).Value & vbCrLf
+        End If
+    Next q
+        
+    SFfile.write vbCrLf
+    
+    'Contents coming from standard $SF text file, do not add rows in sheet reference
+    For q = 595 To 646
+        SFfile.write ThisWorkbook.Worksheets("$SF contents").Cells(q, 1).Value & vbCrLf
+    Next q
+    
+    SFfile.Close
+End If
+End Sub

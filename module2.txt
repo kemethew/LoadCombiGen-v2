@@ -1,0 +1,512 @@
+Option Explicit
+
+Sub SAFE_Load_Generator_Linear()
+
+Application.ScreenUpdating = False
+Application.Calculation = xlCalculationManual
+Application.EnableEvents = False
+
+Dim source As Worksheet
+Dim linear As Worksheet
+Dim nonlinear As Worksheet
+Dim lcc As Integer 'for counting load cases
+Dim lcomb As Integer 'for counting load combinations, initial coming from code
+Dim q As Integer 'for counter load combinations on TABLE:  Load Combinations (LINEAR)
+Dim w As Integer 'for counter on loops based on number of load cases
+Dim e As Integer 'row input in target TABLE:  Load Combinations (LINEAR)
+Dim y As Integer
+
+Set source = ThisWorkbook.Sheets("LC helper")
+Set linear = ThisWorkbook.Sheets("SAFE LC Linear")
+Set nonlinear = ThisWorkbook.Sheets("SAFE LC NonLinear")
+e = 4
+y = 0
+lcc = Application.WorksheetFunction.CountIf(source.Range("b2:b51"), "?*")
+lcomb = Application.WorksheetFunction.CountIf(source.Range("v2:v98"), "?*")
+
+linear.Range("a4:xfd1048576").ClearContents
+
+If lcc <> 0 Then 'number of load cases
+
+
+    'TABLE:  Load Patterns (LINEAR)
+    e = 0
+    For w = 1 To lcc
+    
+        linear.Range("A4").Offset(e + w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        If source.Range("c2").Offset(w - 1, 0).Value = "D(slfwt)" Then
+            linear.Range("B4").Offset(e + w - 1, 0).Value = "DEAD"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "SD" Then
+            linear.Range("B4").Offset(e + w - 1, 0).Value = "SUPER DEAD"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "L" Then
+            linear.Range("B4").Offset(e + w - 1, 0).Value = "LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Lr" Then
+            linear.Range("B4").Offset(e + w - 1, 0).Value = "LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Lreduce" Then
+            linear.Range("B4").Offset(e + w - 1, 0).Value = "REDUCIBLE LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Ex" Or source.Range("c2").Offset(w - 1, 0).Value = "Ez/Ey" Then
+            linear.Range("B4").Offset(e + w - 1, 0).Value = "QUAKE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Wx+" Or source.Range("c2").Offset(w - 1, 0).Value = "Wx-" Or source.Range("c2").Offset(w - 1, 0).Value = "Wz+" Or source.Range("c2").Offset(w - 1, 0).Value = "Wz-" Then
+            linear.Range("B4").Offset(e + w - 1, 0).Value = "WIND"
+        Else
+             linear.Range("B4").Offset(e + w - 1, 0).Value = "OTHER"
+        End If
+        If source.Range("c2").Offset(w - 1, 0).Value = "D(slfwt)" Then
+            linear.Range("c4").Offset(e + w - 1, 0).Value = "1"
+        Else
+            linear.Range("c4").Offset(e + w - 1, 0).Value = "0"
+        End If
+        
+        e = e + 1
+        
+        linear.Range("A4").Offset(e + w - 1, 0).Value = linear.Range("A4").Offset(e - 1 + w - 1, 0).Value & "_ABOVE"
+        linear.Range("B4").Offset(e + w - 1, 0).Value = linear.Range("B4").Offset(e - 1 + w - 1, 0).Value
+        linear.Range("C4").Offset(e + w - 1, 0).Value = "0"
+        
+    Next w
+    
+    
+    'TABLE:  Load Cases 01 - General (LINEAR)
+    For w = 1 To lcc
+    
+        linear.Range("f4").Offset(w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        linear.Range("g4").Offset(w - 1, 0).Value = "LinStatic"
+        linear.Range("h4").Offset(w - 1, 0).Value = "Auto"
+        
+        If source.Range("c2").Offset(w - 1, 0).Value = "D(slfwt)" Then
+            linear.Range("i4").Offset(w - 1, 0).Value = "DEAD"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "SD" Then
+            linear.Range("i4").Offset(w - 1, 0).Value = "SUPER DEAD"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "L" Then
+            linear.Range("i4").Offset(w - 1, 0).Value = "LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Lr" Then
+            linear.Range("i4").Offset(w - 1, 0).Value = "LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Lreduce" Then
+            linear.Range("i4").Offset(w - 1, 0).Value = "REDUCIBLE LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Ex" Or source.Range("c2").Offset(w - 1, 0).Value = "Ez/Ey" Then
+            linear.Range("i4").Offset(w - 1, 0).Value = "QUAKE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Wx+" Or source.Range("c2").Offset(w - 1, 0).Value = "Wx-" Or source.Range("c2").Offset(w - 1, 0).Value = "Wz+" Or source.Range("c2").Offset(w - 1, 0).Value = "Wz-" Then
+            linear.Range("i4").Offset(w - 1, 0).Value = "WIND"
+        Else
+             linear.Range("i4").Offset(w - 1, 0).Value = "OTHER"
+        End If
+        
+    Next w
+    
+    
+    'TABLE:  Load Cases 02 - Static (LINEAR)
+    For w = 1 To lcc
+    
+        linear.Range("l4").Offset(w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        linear.Range("m4").Offset(w - 1, 0).Value = "Zero"
+        linear.Range("n4").Offset(w - 1, 0).Value = "Linear"
+        
+    Next w
+    
+    
+    'TABLE:  Load Cases 06 - Loads Applied (LINEAR)
+    e = 0
+    For w = 1 To lcc
+    
+        linear.Range("r4").Offset(e + w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        linear.Range("s4").Offset(e + w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        linear.Range("t4").Offset(e + w - 1, 0).Value = "1"
+        e = e + 1
+        
+        linear.Range("r4").Offset(e + w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        linear.Range("s4").Offset(e + w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value & "_ABOVE"
+        linear.Range("t4").Offset(e + w - 1, 0).Value = "1"
+        
+    Next w
+    
+    'TABLE:  Load Combinations (LINEAR)
+    e = 4
+    For q = 1 To lcomb
+        If source.Cells(q + 1, 21).Value = 1 Then
+            For w = 1 To lcc
+                
+                If source.Cells(q + 1, 159).Offset(0, w - 1).Value <> "" Then
+                    
+                    linear.Cells(e, 21).Value = "lin" & source.Cells(q + 1, 157).Value 'load combo name
+                    linear.Cells(e, 22).Value = source.Cells(1, w + 158).Value 'load case name
+                    linear.Cells(e, 23).Value = source.Cells(q + 1, 159).Offset(0, w - 1).Value 'load factor
+                    y = y + 1
+                    If y = 1 Then 'for first line of load combination
+                        linear.Cells(e, 24).Value = "Linear Add"
+                        linear.Cells(e, 25).Value = "No"
+                        linear.Cells(e, 26).Value = "No"
+                        linear.Cells(e, 27).Value = "No"
+                        linear.Cells(e, 28).Value = "No"
+                        linear.Cells(e, 29).Value = "No"
+                    End If
+                    e = e + 1
+                        
+                End If
+                
+            Next w
+            y = 0
+        End If
+        
+    Next q
+    
+    'For service load combo envelope
+    
+    For q = 42 To 59
+        If source.Cells(q + 1, 21).Value = 1 Then
+            linear.Cells(e, 21).Value = "linService"
+            linear.Cells(e, 22).Value = "lin" & source.Cells(q + 1, 157).Value
+            linear.Cells(e, 23).Value = "1"
+            y = y + 1
+            If y = 1 Then
+                linear.Cells(e, 24).Value = "Envelope"
+                linear.Cells(e, 25).Value = "No"
+                linear.Cells(e, 26).Value = "No"
+                linear.Cells(e, 27).Value = "No"
+                linear.Cells(e, 28).Value = "No"
+                linear.Cells(e, 29).Value = "No"
+            End If
+            e = e + 1
+        End If
+    Next q
+    y = 0
+    
+    For q = 60 To lcomb
+        If source.Cells(q + 1, 21).Value = 1 Then
+            linear.Cells(e, 21).Value = "linService"
+            linear.Cells(e, 22).Value = "lin" & source.Cells(q + 1, 157).Value
+            linear.Cells(e, 23).Value = "0.75" 'if capacity is with an additional 4/3 increase on load combination with transient loading, Alternate Basic Load Combinations
+            e = e + 1
+        End If
+    Next q
+
+    
+    'For ultimate load combo envelope
+    
+    For q = 1 To 41
+        If source.Cells(q + 1, 21).Value = 1 Then
+            linear.Cells(e, 21).Value = "linUltimate"
+            linear.Cells(e, 22).Value = "lin" & source.Cells(q + 1, 157).Value
+            linear.Cells(e, 23).Value = "1"
+            y = y + 1
+            If y = 1 Then
+                linear.Cells(e, 24).Value = "Envelope"
+                linear.Cells(e, 25).Value = "Yes"
+                linear.Cells(e, 26).Value = "No"
+                linear.Cells(e, 27).Value = "No"
+                linear.Cells(e, 28).Value = "No"
+                linear.Cells(e, 29).Value = "No"
+            End If
+            e = e + 1
+        End If
+    Next q
+    y = 0
+    
+
+    Else
+        MsgBox "No Load Cases to run"
+        
+
+End If
+
+linear.Select
+Application.Goto linear.Range("a1"), True
+linear.Range("a4").Select
+
+Application.ScreenUpdating = True
+Application.Calculation = xlCalculationAutomatic
+Application.EnableEvents = True
+
+
+End Sub
+
+
+Sub SAFE_Load_Generator_NonLinear()
+
+
+Application.ScreenUpdating = False
+Application.Calculation = xlCalculationManual
+Application.EnableEvents = False
+
+
+'Experiment on which load combi are considered as "Dead" in SAFE, right now considerations are those with dead and live loads only
+
+Dim source As Worksheet
+Dim linear As Worksheet
+Dim nonlinear As Worksheet
+Dim lcc As Integer 'for counting load cases
+Dim lcomb As Integer 'for counting load combinations, initial coming from code
+Dim q As Integer 'for counter load combinations on TABLE:  Load Combinations (NONLINEAR)
+Dim w As Integer 'for counter on loops based on number of load cases
+Dim e As Integer 'row input in target TABLE:  Load Combinations (NONLINEAR)
+Dim r As Integer 'column number for lcomb in TABLE:  Load Cases 01 - General (NONLINEAR)
+                 'This is the number of load types
+Dim t As Integer 'row input in target TABLE:  Load Cases 06 - Loads Applied (NONLINEAR)
+Dim switch As Boolean
+Dim y As Integer
+
+Set source = ThisWorkbook.Sheets("LC helper")
+Set linear = ThisWorkbook.Sheets("SAFE LC Linear")
+Set nonlinear = ThisWorkbook.Sheets("SAFE LC NonLinear")
+lcc = Application.WorksheetFunction.CountIf(source.Range("b2:b51"), "?*")
+lcomb = Application.WorksheetFunction.CountIf(source.Range("v2:v98"), "?*")
+e = 4
+y = 0
+
+nonlinear.Range("a4:xfd1048576").ClearContents
+
+If lcc <> 0 Then 'number of load cases
+
+    
+    'TABLE:  Load Patterns (NONLINEAR)
+    e = 0
+    For w = 1 To lcc
+    
+        nonlinear.Range("A4").Offset(e + w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        If source.Range("c2").Offset(w - 1, 0).Value = "D(slfwt)" Then
+            nonlinear.Range("B4").Offset(e + w - 1, 0).Value = "DEAD"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "SD" Then
+            nonlinear.Range("B4").Offset(e + w - 1, 0).Value = "SUPER DEAD"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "L" Then
+            nonlinear.Range("B4").Offset(e + w - 1, 0).Value = "LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Lr" Then
+            nonlinear.Range("B4").Offset(e + w - 1, 0).Value = "LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Lreduce" Then
+            nonlinear.Range("B4").Offset(e + w - 1, 0).Value = "REDUCIBLE LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Ex" Or source.Range("c2").Offset(w - 1, 0).Value = "Ez/Ey" Then
+            nonlinear.Range("B4").Offset(e + w - 1, 0).Value = "QUAKE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Wx+" Or source.Range("c2").Offset(w - 1, 0).Value = "Wx-" Or source.Range("c2").Offset(w - 1, 0).Value = "Wz+" Or source.Range("c2").Offset(w - 1, 0).Value = "Wz-" Then
+            nonlinear.Range("B4").Offset(e + w - 1, 0).Value = "WIND"
+        Else
+             nonlinear.Range("B4").Offset(e + w - 1, 0).Value = "OTHER"
+        End If
+        If source.Range("c2").Offset(w - 1, 0).Value = "D(slfwt)" Then
+            nonlinear.Range("c4").Offset(e + w - 1, 0).Value = "1"
+        Else
+            nonlinear.Range("c4").Offset(e + w - 1, 0).Value = "0"
+        End If
+        
+        e = e + 1
+        
+        nonlinear.Range("A4").Offset(e + w - 1, 0).Value = nonlinear.Range("A4").Offset(e - 1 + w - 1, 0).Value & "_ABOVE"
+        nonlinear.Range("B4").Offset(e + w - 1, 0).Value = nonlinear.Range("B4").Offset(e - 1 + w - 1, 0).Value
+        nonlinear.Range("C4").Offset(e + w - 1, 0).Value = "0"
+        
+    Next w
+    
+    
+    'TABLE:  Load Cases 01 - General (NONLINEAR)
+    For w = 1 To lcc
+    
+        nonlinear.Range("f4").Offset(w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        nonlinear.Range("g4").Offset(w - 1, 0).Value = "LinStatic"
+        nonlinear.Range("h4").Offset(w - 1, 0).Value = "Auto"
+        
+        If source.Range("c2").Offset(w - 1, 0).Value = "D(slfwt)" Then
+            nonlinear.Range("i4").Offset(w - 1, 0).Value = "DEAD"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "SD" Then
+            nonlinear.Range("i4").Offset(w - 1, 0).Value = "SUPER DEAD"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "L" Then
+            nonlinear.Range("i4").Offset(w - 1, 0).Value = "LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Lr" Then
+            nonlinear.Range("i4").Offset(w - 1, 0).Value = "LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Lreduce" Then
+            nonlinear.Range("i4").Offset(w - 1, 0).Value = "REDUCIBLE LIVE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Ex" Or source.Range("c2").Offset(w - 1, 0).Value = "Ez/Ey" Then
+            nonlinear.Range("i4").Offset(w - 1, 0).Value = "QUAKE"
+        ElseIf source.Range("c2").Offset(w - 1, 0).Value = "Wx+" Or source.Range("c2").Offset(w - 1, 0).Value = "Wx-" Or source.Range("c2").Offset(w - 1, 0).Value = "Wz+" Or source.Range("c2").Offset(w - 1, 0).Value = "Wz-" Then
+            nonlinear.Range("i4").Offset(w - 1, 0).Value = "WIND"
+        Else
+             nonlinear.Range("i4").Offset(w - 1, 0).Value = "OTHER"
+        End If
+        
+    Next w
+    
+    e = lcc
+    For w = lcc + 1 To lcc + lcomb
+        If source.Cells(w - lcc + 1, 21).Value = 1 Then
+            switch = False
+            nonlinear.Range("f4").Offset(e, 0).Value = "nlin" & source.Range("v2").Offset(w - lcc - 1, 0).Value
+            nonlinear.Range("g4").Offset(e, 0).Value = "NonStatic"
+            nonlinear.Range("h4").Offset(e, 0).Value = "Auto"
+            
+            For r = 1 To 16
+                If source.Cells(1, 23 + r).Value <> "D(slfwt)" And source.Cells(1, 23 + r).Value <> "SD" And source.Cells(1, 23 + r).Value <> "L" And source.Cells(1, 23 + r).Value <> "Lr" And source.Cells(1, 23 + r).Value <> "Lreduce" Then
+                    If Application.WorksheetFunction.CountIf(source.Range("c2:c51"), source.Cells(1, 23 + r).Value) > 0 Then
+                        If source.Cells(w - lcc + 1, 23 + r).Value <> "" Then
+                        switch = True
+                        End If
+                    End If
+                End If
+            Next r
+            
+            If switch = True Then
+                nonlinear.Range("i4").Offset(e, 0).Value = "OTHER"
+            Else
+                nonlinear.Range("i4").Offset(e, 0).Value = "DEAD" 'experiment on which load combi are considered as "Dead" in SAFE, right now considerations are those with dead and live loads only
+            End If
+            e = e + 1
+        End If
+    Next w
+   
+        
+    'TABLE:  Load Cases 02 - Static (NONLINEAR)
+    For w = 1 To lcc
+    
+        nonlinear.Range("l4").Offset(w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        nonlinear.Range("m4").Offset(w - 1, 0).Value = "Zero"
+        nonlinear.Range("n4").Offset(w - 1, 0).Value = "Linear"
+        
+    Next w
+    
+    e = lcc
+    For w = lcc + 1 To lcc + lcomb
+        If source.Cells(w - lcc + 1, 21).Value = 1 Then
+            switch = False
+            nonlinear.Range("l4").Offset(e, 0).Value = "nlin" & source.Range("v2").Offset(w - lcc - 1, 0).Value
+            nonlinear.Range("m4").Offset(e, 0).Value = "Zero"
+            nonlinear.Range("n4").Offset(e, 0).Value = "Allow Uplift"
+            nonlinear.Range("o4").Offset(e, 0).Value = "0.00001"
+            e = e + 1
+        End If
+    Next w
+    
+    
+    'TABLE:  Load Cases 06 - Loads Applied (NONLINEAR)
+    e = 0
+    For w = 1 To lcc
+    
+        nonlinear.Range("r4").Offset(e + w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        nonlinear.Range("s4").Offset(e + w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        nonlinear.Range("t4").Offset(e + w - 1, 0).Value = "1"
+        
+        e = e + 1
+        
+        nonlinear.Range("r4").Offset(e + w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value
+        nonlinear.Range("s4").Offset(e + w - 1, 0).Value = source.Range("B2").Offset(w - 1, 0).Value & "_ABOVE"
+        nonlinear.Range("t4").Offset(e + w - 1, 0).Value = "1"
+    
+    Next w
+    
+    t = lcc + e + 4
+    For q = 1 To lcomb
+        If source.Cells(q + 1, 21).Value = 1 Then
+            For w = 1 To lcc
+                
+                If source.Cells(q + 1, 159).Offset(0, w - 1).Value <> "" Then
+                    
+                    nonlinear.Cells(t, 18).Value = "nlin" & source.Cells(q + 1, 157).Value 'load combo name
+                    nonlinear.Cells(t, 19).Value = source.Cells(1, w + 158).Value 'load case name
+                    nonlinear.Cells(t, 20).Value = source.Cells(q + 1, 159).Offset(0, w - 1).Value 'load factor
+                    t = t + 1
+                    
+                    nonlinear.Cells(t, 18).Value = "nlin" & source.Cells(q + 1, 157).Value 'load combo name
+                    nonlinear.Cells(t, 19).Value = source.Cells(1, w + 158).Value & "_ABOVE" 'load case name
+                    nonlinear.Cells(t, 20).Value = source.Cells(q + 1, 159).Offset(0, w - 1).Value 'load factor
+                    t = t + 1
+                        
+                End If
+                
+            Next w
+        End If
+    Next q
+    
+    
+    'TABLE:  Load Combinations (LINEAR)
+'    For q = 1 To lcomb
+ '
+  '      For w = 1 To lcc
+   '
+    '        If source.Cells(q + 1, 159).Offset(0, w - 1).Value <> "" Then
+     '
+      '          linear.Cells(e, 21).Value = "lin" & source.Cells(q + 1, 157).Value 'load combo name
+       '         linear.Cells(e, 22).Value = source.Cells(1, w + 158).Value 'load case name
+        '        linear.Cells(e, 23).Value = source.Cells(q + 1, 159).Offset(0, w - 1).Value 'load factor
+         '       y = y + 1
+          '      If y = 1 Then 'for first line of load combination
+           '         linear.Cells(e, 24).Value = "Linear Add"
+            '        linear.Cells(e, 25).Value = "No"
+             '       linear.Cells(e, 26).Value = "No"
+              '      linear.Cells(e, 27).Value = "No"
+               '     linear.Cells(e, 28).Value = "No"
+                '    linear.Cells(e, 29).Value = "No"
+'                End If
+ '               e = e + 1
+  '
+   '         End If
+    '
+     '   Next w
+      '  y = 0
+'
+ '   Next q
+    
+    'TABLE:  Load Combinations (NONLINEAR)
+    'For service load combo envelope
+    
+    e = 4
+    For q = 42 To 59
+        If source.Cells(q + 1, 21).Value = 1 Then
+            nonlinear.Cells(e, 21).Value = "nlinService"
+            nonlinear.Cells(e, 22).Value = "nlin" & source.Cells(q + 1, 157).Value
+            nonlinear.Cells(e, 23).Value = "1"
+            y = y + 1
+            If y = 1 Then
+                nonlinear.Cells(e, 24).Value = "Envelope"
+                nonlinear.Cells(e, 25).Value = "No"
+                nonlinear.Cells(e, 26).Value = "No"
+                nonlinear.Cells(e, 27).Value = "No"
+                nonlinear.Cells(e, 28).Value = "No"
+                nonlinear.Cells(e, 29).Value = "No"
+            End If
+            e = e + 1
+        End If
+    Next q
+    y = 0
+    
+    For q = 60 To lcomb
+        If source.Cells(q + 1, 21).Value = 1 Then
+            nonlinear.Cells(e, 21).Value = "nlinService"
+            nonlinear.Cells(e, 22).Value = "nlin" & source.Cells(q + 1, 157).Value
+            nonlinear.Cells(e, 23).Value = "0.75" 'if capacity is with an additional 4/3 increase on load combination with transient loading, Alternate Basic Load Combinations
+            e = e + 1
+        End If
+    Next q
+
+    
+    'For ultimate load combo envelope
+    
+    For q = 1 To 41
+        If source.Cells(q + 1, 21).Value = 1 Then
+            nonlinear.Cells(e, 21).Value = "nlinUltimate"
+            nonlinear.Cells(e, 22).Value = "nlin" & source.Cells(q + 1, 157).Value
+            nonlinear.Cells(e, 23).Value = "1"
+            y = y + 1
+            If y = 1 Then
+                nonlinear.Cells(e, 24).Value = "Envelope"
+                nonlinear.Cells(e, 25).Value = "Yes"
+                nonlinear.Cells(e, 26).Value = "No"
+                nonlinear.Cells(e, 27).Value = "No"
+                nonlinear.Cells(e, 28).Value = "No"
+                nonlinear.Cells(e, 29).Value = "No"
+            End If
+            e = e + 1
+        End If
+    Next q
+    y = 0
+    
+    
+    Else
+        MsgBox "No Load Cases to run"
+        
+
+End If
+
+nonlinear.Select
+Application.Goto nonlinear.Range("a1"), True
+nonlinear.Range("a4").Select
+
+Application.ScreenUpdating = True
+Application.Calculation = xlCalculationAutomatic
+Application.EnableEvents = True
+
+End Sub
+
